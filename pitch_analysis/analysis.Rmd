@@ -3,10 +3,10 @@ title: "Pitching Repertoire of Trevor Bauer - STAT 432 Analysis I"
 author: "Justin Kim (yundong2@illinois.edu)"
 date: "05/04/2021"
 output:
+  pdf_document:
+    toc: yes
   html_document:
     theme: default
-    toc: yes
-  pdf_document:
     toc: yes
 ---
 
