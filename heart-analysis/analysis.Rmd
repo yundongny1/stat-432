@@ -1,0 +1,137 @@
+---
+title: "Analysis of Heart Disease Dataset"
+author: "Justin Kim (yundong2@illinois.edu)"
+date: "5/12/2021"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    theme: default
+    toc: yes
+---
+
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align = 'center')
+```
+
+```{r, load-packages, include = FALSE}
+# load packages
+library("tidyverse")
+library("caret")
+library("rpart")
+library("rpart.plot")
+```
+
+```{r read-full-data, warning = FALSE, message = FALSE}
+# read full data
+hd = readr::read_csv("data/hd.csv")
+
+set.seed(42)
+trn_idx = createDataPartition(hd$num, p = 0.80, list = TRUE)
+hd_trn = hd[trn_idx$Resample1, ]
+hd_tst = hd[-trn_idx$Resample1, ]
+
+
+#coerce cha to factor
+hd_trn$num = factor(hd_trn$num)
+hd_trn$location = factor(hd_trn$location)
+hd_trn$cp = factor(hd_trn$cp)
+hd_trn$sex = factor(hd_trn$sex)
+hd_trn$fbs = factor(hd_trn$fbs)
+hd_trn$restecg = factor(hd_trn$restecg)
+hd_trn$exang = factor(hd_trn$exang)
+
+
+hd_trn[which(hd_trn$chol == 0), ]$chol = NA
+
+
+hd_trn_full = na.omit(hd_trn)
+
+
+cv_5 = trainControl(method = "cv", number = 5)
+
+set.seed(42)
+hd_tree_mod = train(
+  form = num ~.,
+  data = hd_trn_full,
+  method = "rpart",
+  trControl = cv_5,
+  tuneLength = 10
+)
+set.seed(42)
+hd_knn_mod = train(
+  form = num ~.,
+  data = hd_trn_full,
+  method = "knn",
+  trControl = cv_5,
+  tuneLength = 100
+)
+set.seed(42)
+hd_rf_mod = train(
+  form = num ~ .,
+  data = hd_trn_full,
+  method = "rf",
+  trControl = cv_5,
+  verbose = FALSE
+)
+```
+
+***
+
+## Abstract
+
+The goal of this analysis is test tools that can be used to screen for heart disease using methods learned in class. Machine learning methods such as KNN, decision trees, and random forest methods were used to build model and predict heart disease in patients. We will measure the accuracy of the models and decide which model to use when predicting the heart disease dataset.
+
+***
+
+## Introduction
+
+Heart disease is the leading cause of death in the United States. Heart disease refers to several types of heart conditions, but the most common case of heart disease is coronary artery disease. Coronary artery disease is the narrowing/blockage of major blood vessels supplying blood to the heart, possibly leading to heart failure. Through this analysis, we will build and pick the best possible model to predict heart disease in patients.
+***
+
+## Methods
+
+In order to model the dataset which character variables, we do some data cleaning such as factoring the character variables in order for it to work properly with machine learning methods. We also split the model into a training, test, validation, and estimation dataset
+
+### Data
+The heart disease data set is from the UC Irvine Machine Learning Repository. This dataset was created by Hungarian Institute of Cardiology. 
+* Budapest: Andras Janosi, M.D.
+* University Hospital, Zurich, Switzerland: William Steinbrunn, M.D.
+* University Hospital, Basel, Switzerland: Matthias Pfisterer, M.D.
+* V.A. Medical Center, Long Beach and Cleveland Clinic Foundation: Robert Detrano, M.D., Ph.D.
+
+Below are the variables that will be used in the modeling of the dataset.
+
+* age - the age of the patient
+* sex - the gender of the patient
+* cp - the type of chest pain experienced by the individual
+* trestbps - the resting blood pressure
+* chol - serum cholestoral
+* fbs - fasting blood sugar
+* restecg - resting electrocardiographic results
+* thalach - maximum heart rate achieved
+* exang - exercise induced angina
+* oldpeak = ST depression induced by exercise relative to rest
+* slope - the slope of the peak exercise ST segment
+* num - number of major heart vessels with greater than 50% diameter narrowing
+* thal: displays the thalassemia
+* location - location of the heart disease
+
+***
+
+## Results
+```{r}
+hd_tree_mod #0.5628655  
+hd_knn_mod #0.5546208  
+hd_rf_mod #0.5919417  
+```
+
+After modeling, we see that knn method had the lowest accuracy of 0.5546, followed by decision tree at 0.5628, and random forest at 0.5919. From this, we choose the model with the highest accuracy, random forest.
+
+***
+
+## Discussion
+
+Because random forest had the best accuracy, we choose random forest method when predicting heart disease.
+
+***
